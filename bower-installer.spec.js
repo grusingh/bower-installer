@@ -3,7 +3,7 @@ var rimraf = require('rimraf');
 var fs = require('fs');
 var async = require('async');
 var exec = require('child_process').exec;
-var TIMEOUT = 40000;
+var TIMEOUT = 60000;
 
 function expectFilesToExist(files, run) {
 	async.each(files, function(file, callback) {
@@ -22,16 +22,20 @@ function expectFilesToExist(files, run) {
 		'test/bootstrap/bower_components',
 		'test/full/build',
 		'test/full/bower_components',
+    'test/glob/build',
+    'test/glob/bower_components',
 		'test/ignore/build',
 		'test/ignore/bower_components',
 		'test/mapping/build',
 		'test/mapping/bower_components',
+    'test/multiDirGlob/build',
+    'test/multiDirGlob/bower_components',
+    'test/multiFolder/build',
+    'test/multiFolder/bower_components',
 		'test/multiMain/build',
 		'test/multiMain/bower_components',
 		'test/multiPath/build',
 		'test/multiPath/bower_components',
-		'test/glob/build',
-		'test/glob/bower_components'
 	], function(file, callback) {
 		rimraf(path.join(process.cwd(), file), function() {
 			callback();
@@ -50,6 +54,18 @@ describe("Bower Installer", function() {
 			], run);			
 		});
 	}, TIMEOUT);
+
+  it('Should remove bower_components directory', function(run) {
+    exec('node ../../bower-installer.js -r', {cwd: path.join(process.cwd(), 'test/basic')}, function(err, stdout, stderr) {
+      expect(err).toBeNull();
+      expectFilesToExist([
+        'test/basic/build/src/jquery/jquery.js',
+        'test/basic/build/src/jquery-ui/jquery-ui.js'
+      ], run);
+
+      expect(fs.existsSync(path.join(process.cwd(), 'bower_components'))).toBeFalsy();
+    });
+  }, TIMEOUT);
 
 	it('Should pass bootstrap', function(run) {
 		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/bootstrap')}, function(err, stdout, stderr) {
@@ -93,6 +109,56 @@ describe("Bower Installer", function() {
 		});
 	}, TIMEOUT);
 
+  it('Should pass glob', function(run) {
+    exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/glob')}, function(err, stdout, stderr) {
+      expect(err).toBeNull();
+      expectFilesToExist([
+        'test/glob/build/src/datejs/date-af-ZA.js',
+        'test/glob/build/src/datejs/date-ar-AE.js',
+        'test/glob/build/src/datejs/date-ar-BH.js',
+        'test/glob/build/src/datejs/date-ar-DZ.js',
+        'test/glob/build/src/datejs/date-ar-EG.js',
+        'test/glob/build/src/datejs/date-ar-IQ.js',
+        'test/glob/build/src/datejs/date-ar-JO.js',
+        'test/glob/build/src/datejs/date-ar-KW.js',
+        'test/glob/build/src/datejs/date-ar-LB.js',
+        'test/glob/build/src/datejs/date-uz-Cyrl-UZ.js',
+        'test/glob/build/src/datejs/date-uz-Latn-UZ.js',
+        'test/glob/build/src/datejs/date-vi-VN.js',
+        'test/glob/build/src/datejs/date-xh-ZA.js',
+        'test/glob/build/src/datejs/date-zh-CN.js',
+        'test/glob/build/src/datejs/date-zh-HK.js',
+        'test/glob/build/src/datejs/date-zh-MO.js',
+        'test/glob/build/src/datejs/date-zh-SG.js',
+        'test/glob/build/src/datejs/date-zh-TW.js',
+        'test/glob/build/src/datejs/date-zu-ZA.js',
+        'test/glob/build/src/datejs/date.js'
+      ], run);
+    });
+  }, TIMEOUT);
+
+  it('Should pass ignore', function(run) {
+    exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/ignore')}, function(err, stdout, stderr) {
+      expect(err).toBeNull();
+      expectFilesToExist([
+        'test/ignore/build/src/ember-model/ember-model.js',
+        'test/ignore/build/src/jquery/jquery.js'
+      ], run);
+    });
+  }, TIMEOUT);
+
+  it('Should pass mapping', function(run) {
+    exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/mapping')}, function(err, stdout, stderr) {
+      expect(err).toBeNull();
+      expectFilesToExist([
+        'test/mapping/build/src/ember-bootstrap/ember-bootstrap.js',
+        'test/mapping/build/src/ember-easyForm/subdirectory/ember-easyForm.js',
+        'test/mapping/build/src/jquery/jquery.js',
+        'test/mapping/build/src/jquery-ui/jquery-ui.js'
+      ], run);
+    });
+  }, TIMEOUT);
+
 	it('Should pass multiDirGlob', function(run) {
 		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/multiDirGlob')}, function(err, stdout, stderr) {
 			expect(err).toBeNull();
@@ -114,27 +180,15 @@ describe("Bower Installer", function() {
 		});
 	}, TIMEOUT);
 
-	it('Should pass ignore', function(run) {
-		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/ignore')}, function(err, stdout, stderr) {
-			expect(err).toBeNull();
-			expectFilesToExist([
-				'test/ignore/build/src/ember-model/ember-model.js',
-				'test/ignore/build/src/jquery/jquery.js'
-			], run);			
-		});
-	}, TIMEOUT);
-
-	it('Should pass mapping', function(run) {
-		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/mapping')}, function(err, stdout, stderr) {
-			expect(err).toBeNull();
-			expectFilesToExist([
-				'test/mapping/build/src/ember-bootstrap/ember-bootstrap.js',
-				'test/mapping/build/src/ember-easyForm/subdirectory/ember-easyForm.js',
-				'test/mapping/build/src/jquery/jquery.js',
-				'test/mapping/build/src/jquery-ui/jquery-ui.js'
-			], run);			
-		});
-	}, TIMEOUT);
+  it('Should install multiFolder', function(run) {
+    exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/multiFolder')}, function(err, stdout, stderr) {
+      expect(err).toBeNull();
+      expectFilesToExist([
+        'test/multiFolder/build/src-prod/index.js',
+        'test/multiFolder/build/src-test/index.js'
+      ], run);
+    });
+  }, TIMEOUT);
 
 	it('Should pass multiMain', function(run) {
 		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/multiMain')}, function(err, stdout, stderr) {
@@ -153,46 +207,6 @@ describe("Bower Installer", function() {
 				'test/multiPath/build/css/buster.js/buster-test.css',
 				'test/multiPath/build/src/buster.js/buster-test.js'
 			], run);			
-		});
-	}, TIMEOUT);
-
-	it('Should pass glob', function(run) {
-		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/glob')}, function(err, stdout, stderr) {
-			expect(err).toBeNull();
-			expectFilesToExist([
-				'test/glob/build/src/datejs/date-af-ZA.js',
-				'test/glob/build/src/datejs/date-ar-AE.js',
-				'test/glob/build/src/datejs/date-ar-BH.js',
-				'test/glob/build/src/datejs/date-ar-DZ.js',
-				'test/glob/build/src/datejs/date-ar-EG.js',
-				'test/glob/build/src/datejs/date-ar-IQ.js',
-				'test/glob/build/src/datejs/date-ar-JO.js',
-				'test/glob/build/src/datejs/date-ar-KW.js',
-				'test/glob/build/src/datejs/date-ar-LB.js',
-				'test/glob/build/src/datejs/date-uz-Cyrl-UZ.js',
-				'test/glob/build/src/datejs/date-uz-Latn-UZ.js',
-				'test/glob/build/src/datejs/date-vi-VN.js',
-				'test/glob/build/src/datejs/date-xh-ZA.js',
-				'test/glob/build/src/datejs/date-zh-CN.js',
-				'test/glob/build/src/datejs/date-zh-HK.js',
-				'test/glob/build/src/datejs/date-zh-MO.js',
-				'test/glob/build/src/datejs/date-zh-SG.js',
-				'test/glob/build/src/datejs/date-zh-TW.js',
-				'test/glob/build/src/datejs/date-zu-ZA.js',
-				'test/glob/build/src/datejs/date.js'
-			], run);			
-		});
-	}, TIMEOUT);
-	
-	it('Should remove bower_components directory', function(run) {
-		exec('node ../../bower-installer.js -r', {cwd: path.join(process.cwd(), 'test/basic')}, function(err, stdout, stderr) {
-			expect(err).toBeNull();
-			expectFilesToExist([
-				'test/basic/build/src/jquery/jquery.js',
-				'test/basic/build/src/jquery-ui/jquery-ui.js'
-			], run);
-			
-			expect(fs.existsSync(path.join(process.cwd(), 'bower_components'))).toBeFalsy();
 		});
 	}, TIMEOUT);
 });
