@@ -2,7 +2,7 @@
 
 var _       = require('lodash'),
     async   = require('async'),
-    fileLib = require("node-fs"),
+    fileLib = require('node-fs'),
     colors  = require('colors'),
     bower   = require('bower'),
     path    = require('path'),
@@ -16,13 +16,13 @@ var basePath = process.cwd(),
     knownOpts = {
       'remove': Boolean,
       'help': Boolean,
-      'keep': Boolean,
+      'remove_install_path': Boolean,
       'silent': Boolean
     },
     shortHands = {
       "r": ["--remove"],
       "h": ["--help"],
-      "k": ["--keep"],
+      "p": ["--remove-install-path"],
       "s": ["--silent"]
     },
     cfg;
@@ -40,6 +40,7 @@ if(options.help) {
   console.log(("---------------------------------------------------------------------").blue);
   console.log(("Options:").green);
   console.log("--remove [r] - Remove the bower_components directory after execution.")
+  console.log("--remove-install-path [p] - Remove the install destination paths before installing dependencies.")
   console.log("--help   [h] - Display this.");
   console.log(("---------------------------------------------------------------------").blue);
   return;
@@ -49,7 +50,11 @@ if(options.help) {
 try {
     cfg = require(path.join(basePath,'bower.json')).install;	
 } catch(e) {
-    cfg = require(path.join(basePath,'component.json')).install;
+    try {
+        cfg = require(path.join(basePath,'component.json')).install;
+    } catch(e) {
+    	throw new Error('Neither bower.json nor component.json present');
+    }
 }
 var paths;
 var installPathFiles;
@@ -63,18 +68,31 @@ if(!cfg || !cfg.path) {
 	installPathFiles = _.map(paths,basePath);		
 }else{
 	paths = _.isString(cfg.path) ? {all: cfg.path} : cfg.path;
-	installPathFiles =  _.map( paths,
-		function(path) {
-			return (basePath + pathSep + path);
-		});
-	_.each(installPathFiles, function(file) {
-	  if(!options.keep) {
-		utils.deleteFolderRecursive(file);
-	  }
-	  if(!fs.existsSync(file)) {
-		fileLib.mkdirSync(file, 0755, true);
-	  }
-	});		
+
+  if (cfg.base !== undefined) {
+    _.each(paths, function(path, key) { paths[key] = cfg.base + pathSep + path; });
+  
+  } else {
+  	installPathFiles =  _.map( paths,
+  		function(path) {
+  			return (basePath + pathSep + path);
+  		});
+  	_.each(installPathFiles, function(file) {
+
+      // if file path has variables like {name} do not create/delete folder
+      // the folder will be created later in the installer
+      if (!utils.hasVariableInPath(file)) {
+
+        if(options['remove-install-path']) {
+          utils.deleteFolderRecursive(file);
+        }
+
+        if(!fs.existsSync(file)) {
+          fileLib.mkdirSync(file, 0755, true);
+        }
+      }
+  	});
+  }	
 }
 
 if (!options.silent) {
@@ -109,13 +127,20 @@ bower.commands
         var dep = o.dep,
             key = o.key;
 
+          var keypath = basePath + pathSep + bower.config.directory + pathSep + key;
+          var pakcfg = utils.getJSON(keypath, pathSep);
+          if (!pakcfg) {
+            pakcfg = {name: key};
+          }
+          pakcfg.key = key;
+
           if(!cfg.ignore || (cfg.ignore && !_.contains(cfg.ignore, key)) ) {
             if(_.isArray(dep)) {
                 async.each(dep, function(subDep, callback) {
-                    installer.installDependency(subDep, key, cfg, paths, options.silent, callback);
+                    installer.installDependency(subDep, pakcfg, cfg, paths, options.silent, callback);
                 }, callback);
             } else {
-               installer.installDependency(dep, key, cfg, paths, options.silent, callback);
+               installer.installDependency(dep, pakcfg, cfg, paths, options.silent, callback);
             }
           } else {
             if (!options.silent) {

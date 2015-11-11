@@ -31,7 +31,9 @@ function expectFilesToExist(files, run) {
 		'test/multiPath/build',
 		'test/multiPath/bower_components',
 		'test/glob/build',
-		'test/glob/bower_components'
+		'test/glob/bower_components',
+		'test/keyword/build',
+		'test/keyword/bower_components'
 	], function(file, callback) {
 		rimraf(path.join(process.cwd(), file), function() {
 			callback();
@@ -47,10 +49,9 @@ describe("Bower Installer", function() {
 			expectFilesToExist([
 				'test/basic/build/src/jquery/jquery.js',
 				'test/basic/build/src/jquery-ui/jquery-ui.js'
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
-
 	it('Should pass bootstrap', function(run) {
 		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/bootstrap')}, function(err, stdout, stderr) {
 			expect(err).toBeNull();
@@ -62,7 +63,7 @@ describe("Bower Installer", function() {
 				'test/bootstrap/build/src/bootstrap/glyphicons-halflings-regular.svg',
 				'test/bootstrap/build/src/bootstrap/bootstrap.css',
 				'test/bootstrap/build/src/jquery/jquery.js'
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
 
@@ -70,7 +71,7 @@ describe("Bower Installer", function() {
 		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/full')}, function(err, stdout, stderr) {
 			expect(err).toBeNull();
 			expectFilesToExist([
-				'test/full/build/src/backbone-nested/backbone-nested.js',
+				'test/full/build/src/backbone-nested/backbone-nested-models.js',
 				'test/full/build/src/backbone/backbone.js',
 				'test/full/build/src/buster-jquery-assertions/buster-jquery-assertions.js',
 				'test/full/build/src/buster.js/buster-test.css',
@@ -89,7 +90,7 @@ describe("Bower Installer", function() {
 				'test/full/build/src/d3/d3.js',
 				'test/full/build/src/jquery-ui/jquery-ui.js',
 				'test/full/build/src/speak.js/speakGenerator.js',
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
 
@@ -110,7 +111,7 @@ describe("Bower Installer", function() {
 				"test/multiDirGlob/build/src/bootstrap/css/bootstrap.min.css",
 				"test/multiDirGlob/build/src/jquery/jquery.js",
 				"test/multiDirGlob/build/src/bootstrap/css/bootstrap.css.map"
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
 
@@ -120,7 +121,7 @@ describe("Bower Installer", function() {
 			expectFilesToExist([
 				'test/ignore/build/src/ember-model/ember-model.js',
 				'test/ignore/build/src/jquery/jquery.js'
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
 
@@ -132,7 +133,7 @@ describe("Bower Installer", function() {
 				'test/mapping/build/src/ember-easyForm/subdirectory/ember-easyForm.js',
 				'test/mapping/build/src/jquery/jquery.js',
 				'test/mapping/build/src/jquery-ui/jquery-ui.js'
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
 
@@ -141,7 +142,7 @@ describe("Bower Installer", function() {
 			expect(err).toBeNull();
 			expectFilesToExist([
 				'test/multiMain/build/src/datejs/date.js'
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
 
@@ -152,7 +153,7 @@ describe("Bower Installer", function() {
 				'test/multiPath/build/src/buster-jquery-assertions/buster-jquery-assertions.js',
 				'test/multiPath/build/css/buster.js/buster-test.css',
 				'test/multiPath/build/src/buster.js/buster-test.js'
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
 
@@ -180,10 +181,10 @@ describe("Bower Installer", function() {
 				'test/glob/build/src/datejs/date-zh-TW.js',
 				'test/glob/build/src/datejs/date-zu-ZA.js',
 				'test/glob/build/src/datejs/date.js'
-			], run);			
+			], run);
 		});
 	}, TIMEOUT);
-	
+
 	it('Should remove bower_components directory', function(run) {
 		exec('node ../../bower-installer.js -r', {cwd: path.join(process.cwd(), 'test/basic')}, function(err, stdout, stderr) {
 			expect(err).toBeNull();
@@ -191,8 +192,44 @@ describe("Bower Installer", function() {
 				'test/basic/build/src/jquery/jquery.js',
 				'test/basic/build/src/jquery-ui/jquery-ui.js'
 			], run);
-			
+
 			expect(fs.existsSync(path.join(process.cwd(), 'bower_components'))).toBeFalsy();
+		});
+	}, TIMEOUT);
+	it('Should pass multiDirGlobWithSameNestedFolder', function(run) {
+		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/multiDirGlobWithSameNestedFolder')}, function(err, stdout, stderr) {
+			expect(err).toBeNull();
+			expectFilesToExist([
+				"test/multiDirGlobWithSameNestedFolder/build/src/ace/lib/oop.js"
+			], run);
+		});
+	}, TIMEOUT);
+
+	it('Should pass keyword', function(run) {
+		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/keyword')}, function(err, stdout, stderr) {
+			expect(err).toBeNull();
+			expectFilesToExist([
+				'test/keyword/build/bootstrap/3.0.3/css/bootstrap.css',
+				'test/keyword/build/bootstrap/3.0.3/fonts/glyphicons-halflings-regular.eot',
+				'test/keyword/build/bootstrap/3.0.3/fonts/glyphicons-halflings-regular.svg',
+				'test/keyword/build/bootstrap/3.0.3/fonts/glyphicons-halflings-regular.ttf',
+				'test/keyword/build/bootstrap/3.0.3/fonts/glyphicons-halflings-regular.woff',
+				'test/keyword/build/bootstrap/3.0.3/js/bootstrap.js'
+			], run);
+		});
+	}, TIMEOUT);
+
+	it('Should pass regExp', function(run) {
+		exec('node ../../bower-installer.js', {cwd: path.join(process.cwd(), 'test/regExp')}, function(err, stdout, stderr) {
+			expect(err).toBeNull();
+			expectFilesToExist([
+				'test/regExp/build/src/Asset/Lib/flair/Font/ubuntu-r-webfont.woff',
+				'test/regExp/build/src/Asset/Lib/flair/Font/ubuntu-r-webfont.woff2',
+				'test/regExp/build/src/Asset/Lib/flair/Font/ubuntu-r-webfont.eot',
+				'test/regExp/build/src/Asset/Lib/flair/Font/ubuntu-r-webfont.ttf',
+				'test/regExp/build/src/Style/Lib/flair/ubuntu.font.scss',
+				'test/regExp/build/src/Style/Lib/flair/base.scss',
+			], run);
 		});
 	}, TIMEOUT);
 });

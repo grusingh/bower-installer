@@ -5,8 +5,6 @@ Tool for installing bower dependencies that won't include entire repos. Although
 as a light-weight tool to quickly install browser dependencies, it currently does not provide much
 functionality for installing specific "built" components for the client.
 
-NOTE: Changed with v0.4.0 bower-installer will automatically run `bower install` before moving files around.
-
 #Bower installs entire repositories
 
 ```javascript
@@ -104,7 +102,7 @@ an `Array` instead of a `String` inside the sources hash. Or you can use file ma
 ```
 
 #Install files to multiple locations
-Files can be installed to multiple locations based upon file type. Do so by modifying the `path` to be a map of file-type
+Files can be installed to multiple locations based upon file type or regular expression. Do so by modifying the `path` to be a map of file-type
  locations. Example:
  ```javascript
 {
@@ -116,16 +114,51 @@ Files can be installed to multiple locations based upon file type. Do so by modi
   "install" : {
     "path" : {
       "css": "src/css",
-      "js": "src/js"
+      "js": "src/js",
+      "/[sc|le]ss$/": "src/css"
     },
     "sources" : {
       "jquery-ui" : [
-        "components/jquery-ui/ui/jquery-ui.custom.js",
-        "components/jquery-ui/themes/start/jquery-ui.css"
+        "bower_components/jquery-ui/ui/jquery-ui.custom.js",
+        "bower_components/jquery-ui/themes/start/jquery-ui.css"
       ]
     }
   }
 }
+```
+
+###Configurable paths
+Paths can be custom configurable with variables (key, name and version):
+```javascript
+{
+    "name": "test",
+    "version": "0.0.2",
+    "dependencies": {
+        "bootstrap": "~3.0.3"
+    },
+    "install": {
+        "base":  "build",
+        "path" : {
+            "js": "{name}/js",
+            "css": "{name}/css",
+            "eot": "{name}/fonts",
+            "svg": "{name}/fonts",
+            "ttf": "{name}/fonts",
+            "woff": "{name}/fonts"
+        }       
+    }
+}
+```
+
+Will create this output structure:
+```
+build/
+    bootstrap/
+      js
+      css
+      fonts
+    jquery
+      js
 ```
 
 #Rename files during copy
@@ -134,7 +167,7 @@ Files can be renamed when bower-installer is copying them to their new destinati
 {
   "name" : "test",
   "version": "0.1",
-  "dependencies" : {
+  "dependencies/" : {
     "jquery-ui" : "latest"
   },
   "install" : {
@@ -152,7 +185,7 @@ Files can be renamed when bower-installer is copying them to their new destinati
 ```
 
 #Ignore files
-Files can be ignored and not copied. Do so by adding the appropriate keys to the `ignore` array. In the following example, `ember-model` has as dependency on `ember` and `handlebars`, so normally `ember` and the `handlebars` js files would be copied but in this case we don't want them copied over. Example:
+Files can be ignored and not copied. Do so by adding the appropriate  to the `ignore` array. In the following example, `ember-model` has as dependency on `ember` and `handlebars`, so normally `ember` and the `handlebars` js files would be copied but in this case we don't want them copied over. Example:
  ```javascript
 {
   "name" : "test",
@@ -190,10 +223,15 @@ You can specify a folder and get all files inside it preserving its folder struc
 ```
 
 ##Change log
- - 0.8.4 - Add silent option to avoid console.log output. --silent or -s closes #58
- - 0.8.3 - Path can now be blank, allowing for install into root of project. fixes #59
+ - 1.2.0 - Allow matching by a regular expression instead of just file extension. Thank you to [@g105b](https://github.com/blittle/bower-installer/pull/101)
+ - 1.1.0 - Updates to the configuration key API allowing {key}, {version}, and {name}. Also do not require a base path parameter. Thank you to [@kimus](http://github.com/blittle/bower-installer/pull/96)!
+ - 1.0.0 - Breaking API changes, --keep flag removed in favor of --remove-install-path or -p - [#53](https://github.com/blittle/bower-installer/issues/53)
+         - Destination paths configurable - [#70](https://github.com/blittle/bower-installer/pull/70)
+         - Fixes [#83](https://github.com/blittle/bower-installer/pull/83), [#78](https://github.com/blittle/bower-installer/pull/78), [#76](https://github.com/blittle/bower-installer/pull/76)
+ - 0.8.4 - Add silent option to avoid console.log output. --silent or -s closes [#58](https://github.com/blittle/bower-installer/pull/58)
+ - 0.8.3 - Path can now be blank, allowing for install into root of project. fixes [#59](https://github.com/blittle/bower-installer/pull/59)
  - 0.8.2 - Upgrade bower to fix underlying bugs.
- - 0.8.0 - Add an option for not removing the destination directories (--keep or -k). Preserve folder structures per extensions issue https://github.com/blittle/bower-installer/pull/52
+ - 0.8.0 - Add an option for not removing the destination directories (--keep or -k). Preserve folder structures per extensions issue [#52](https://github.com/blittle/bower-installer/pull/52)
  - 0.7.0 - Preserve folder structure when using glob patterns.
  - 0.6.1 - The commandline flag --remove or -r will remove the "bower_components" directory when installation completes.
  - 0.6.0 - Add file globbing and a travis-ci enabled test suite.
